@@ -1,0 +1,35 @@
+{
+  "name": "purimcharity.org",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npm run build && firebase deploy",
+    "build": "parcel build src/index.html",
+    "start": "parcel serve src/index.html --open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tadwork/purimcharity.org.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tadwork/purimcharity.org/issues"
+  },
+  "homepage": "https://github.com/Tadwork/purimcharity.org#readme",
+  "dependencies": {
+    "firebase-tools": "^6.3.0",
+    "utilities": "^1.0.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "lit-html": "^1.0.0-rc.2",
+    "parcel-bundler": "^1.11.0",
+    "parcel-plugin-purgecss": "^2.1.0",
+    "tailwindcss": "^0.7.4",
+    "tailwindcss-scale": "0.0.7",
+    "tailwindcss-transition": "^1.0.5"
+  }
+}
