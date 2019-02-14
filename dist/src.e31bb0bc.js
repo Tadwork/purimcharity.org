@@ -104,1630 +104,795 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({"../node_modules/lit-html/lib/directive.js":[function(require,module,exports) {
-"use strict";
+})({"../node_modules/dialog-polyfill/dialog-polyfill.js":[function(require,module,exports) {
+var define;
+(function() {
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isDirective = exports.directive = void 0;
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-const directives = new WeakMap();
-/**
- * Brands a function as a directive so that lit-html will call the function
- * during template rendering, rather than passing as a value.
- *
- * @param f The directive factory function. Must be a function that returns a
- * function of the signature `(part: Part) => void`. The returned function will
- * be called with the part object
- *
- * @example
- *
- * ```
- * import {directive, html} from 'lit-html';
- *
- * const immutable = directive((v) => (part) => {
- *   if (part.value !== v) {
- *     part.setValue(v)
- *   }
- * });
- * ```
- */
-
-const directive = f => (...args) => {
-  const d = f(...args);
-  directives.set(d, true);
-  return d;
-};
-
-exports.directive = directive;
-
-const isDirective = o => typeof o === 'function' && directives.has(o);
-
-exports.isDirective = isDirective;
-},{}],"../node_modules/lit-html/lib/dom.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.removeNodes = exports.reparentNodes = exports.isCEPolyfill = void 0;
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * @module lit-html
- */
-
-/**
- * True if the custom elements polyfill is in use.
- */
-const isCEPolyfill = window.customElements !== undefined && window.customElements.polyfillWrapFlushCallback !== undefined;
-/**
- * Reparents nodes, starting from `startNode` (inclusive) to `endNode`
- * (exclusive), into another container (could be the same container), before
- * `beforeNode`. If `beforeNode` is null, it appends the nodes to the
- * container.
- */
-
-exports.isCEPolyfill = isCEPolyfill;
-
-const reparentNodes = (container, start, end = null, before = null) => {
-  let node = start;
-
-  while (node !== end) {
-    const n = node.nextSibling;
-    container.insertBefore(node, before);
-    node = n;
-  }
-};
-/**
- * Removes nodes, starting from `startNode` (inclusive) to `endNode`
- * (exclusive), from `container`.
- */
-
-
-exports.reparentNodes = reparentNodes;
-
-const removeNodes = (container, startNode, endNode = null) => {
-  let node = startNode;
-
-  while (node !== endNode) {
-    const n = node.nextSibling;
-    container.removeChild(node);
-    node = n;
-  }
-};
-
-exports.removeNodes = removeNodes;
-},{}],"../node_modules/lit-html/lib/part.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.nothing = exports.noChange = void 0;
-
-/**
- * @license
- * Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * A sentinel value that signals that a value was handled by a directive and
- * should not be written to the DOM.
- */
-const noChange = {};
-/**
- * A sentinel value that signals a NodePart to fully clear its content.
- */
-
-exports.noChange = noChange;
-const nothing = {};
-exports.nothing = nothing;
-},{}],"../node_modules/lit-html/lib/template.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.lastAttributeNameRegex = exports.createMarker = exports.isTemplatePartActive = exports.Template = exports.boundAttributeSuffix = exports.markerRegex = exports.nodeMarker = exports.marker = void 0;
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * An expression marker with embedded unique key to avoid collision with
- * possible text in templates.
- */
-const marker = `{{lit-${String(Math.random()).slice(2)}}}`;
-/**
- * An expression marker used text-positions, multi-binding attributes, and
- * attributes with markup-like text values.
- */
-
-exports.marker = marker;
-const nodeMarker = `<!--${marker}-->`;
-exports.nodeMarker = nodeMarker;
-const markerRegex = new RegExp(`${marker}|${nodeMarker}`);
-/**
- * Suffix appended to all bound attribute names.
- */
-
-exports.markerRegex = markerRegex;
-const boundAttributeSuffix = '$lit$';
-/**
- * An updateable Template that tracks the location of dynamic parts.
- */
-
-exports.boundAttributeSuffix = boundAttributeSuffix;
-
-class Template {
-  constructor(result, element) {
-    this.parts = [];
-    this.element = element;
-    let index = -1;
-    let partIndex = 0;
-    const nodesToRemove = [];
-
-    const _prepareTemplate = template => {
-      const content = template.content; // Edge needs all 4 parameters present; IE11 needs 3rd parameter to be
-      // null
-
-      const walker = document.createTreeWalker(content, 133
-      /* NodeFilter.SHOW_{ELEMENT|COMMENT|TEXT} */
-      , null, false); // Keeps track of the last index associated with a part. We try to delete
-      // unnecessary nodes, but we never want to associate two different parts
-      // to the same index. They must have a constant node between.
-
-      let lastPartIndex = 0;
-
-      while (walker.nextNode()) {
-        index++;
-        const node = walker.currentNode;
-
-        if (node.nodeType === 1
-        /* Node.ELEMENT_NODE */
-        ) {
-            if (node.hasAttributes()) {
-              const attributes = node.attributes; // Per
-              // https://developer.mozilla.org/en-US/docs/Web/API/NamedNodeMap,
-              // attributes are not guaranteed to be returned in document order.
-              // In particular, Edge/IE can return them out of order, so we cannot
-              // assume a correspondance between part index and attribute index.
-
-              let count = 0;
-
-              for (let i = 0; i < attributes.length; i++) {
-                if (attributes[i].value.indexOf(marker) >= 0) {
-                  count++;
-                }
-              }
-
-              while (count-- > 0) {
-                // Get the template literal section leading up to the first
-                // expression in this attribute
-                const stringForPart = result.strings[partIndex]; // Find the attribute name
-
-                const name = lastAttributeNameRegex.exec(stringForPart)[2]; // Find the corresponding attribute
-                // All bound attributes have had a suffix added in
-                // TemplateResult#getHTML to opt out of special attribute
-                // handling. To look up the attribute value we also need to add
-                // the suffix.
-
-                const attributeLookupName = name.toLowerCase() + boundAttributeSuffix;
-                const attributeValue = node.getAttribute(attributeLookupName);
-                const strings = attributeValue.split(markerRegex);
-                this.parts.push({
-                  type: 'attribute',
-                  index,
-                  name,
-                  strings
-                });
-                node.removeAttribute(attributeLookupName);
-                partIndex += strings.length - 1;
-              }
-            }
-
-            if (node.tagName === 'TEMPLATE') {
-              _prepareTemplate(node);
-            }
-          } else if (node.nodeType === 3
-        /* Node.TEXT_NODE */
-        ) {
-            const data = node.data;
-
-            if (data.indexOf(marker) >= 0) {
-              const parent = node.parentNode;
-              const strings = data.split(markerRegex);
-              const lastIndex = strings.length - 1; // Generate a new text node for each literal section
-              // These nodes are also used as the markers for node parts
-
-              for (let i = 0; i < lastIndex; i++) {
-                parent.insertBefore(strings[i] === '' ? createMarker() : document.createTextNode(strings[i]), node);
-                this.parts.push({
-                  type: 'node',
-                  index: ++index
-                });
-              } // If there's no text, we must insert a comment to mark our place.
-              // Else, we can trust it will stick around after cloning.
-
-
-              if (strings[lastIndex] === '') {
-                parent.insertBefore(createMarker(), node);
-                nodesToRemove.push(node);
-              } else {
-                node.data = strings[lastIndex];
-              } // We have a part for each match found
-
-
-              partIndex += lastIndex;
-            }
-          } else if (node.nodeType === 8
-        /* Node.COMMENT_NODE */
-        ) {
-            if (node.data === marker) {
-              const parent = node.parentNode; // Add a new marker node to be the startNode of the Part if any of
-              // the following are true:
-              //  * We don't have a previousSibling
-              //  * The previousSibling is already the start of a previous part
-
-              if (node.previousSibling === null || index === lastPartIndex) {
-                index++;
-                parent.insertBefore(createMarker(), node);
-              }
-
-              lastPartIndex = index;
-              this.parts.push({
-                type: 'node',
-                index
-              }); // If we don't have a nextSibling, keep this node so we have an end.
-              // Else, we can remove it to save future costs.
-
-              if (node.nextSibling === null) {
-                node.data = '';
-              } else {
-                nodesToRemove.push(node);
-                index--;
-              }
-
-              partIndex++;
-            } else {
-              let i = -1;
-
-              while ((i = node.data.indexOf(marker, i + 1)) !== -1) {
-                // Comment node has a binding marker inside, make an inactive part
-                // The binding won't work, but subsequent bindings will
-                // TODO (justinfagnani): consider whether it's even worth it to
-                // make bindings in comments work
-                this.parts.push({
-                  type: 'node',
-                  index: -1
-                });
-              }
-            }
-          }
-      }
+  // nb. This is for IE10 and lower _only_.
+  var supportCustomEvent = window.CustomEvent;
+  if (!supportCustomEvent || typeof supportCustomEvent === 'object') {
+    supportCustomEvent = function CustomEvent(event, x) {
+      x = x || {};
+      var ev = document.createEvent('CustomEvent');
+      ev.initCustomEvent(event, !!x.bubbles, !!x.cancelable, x.detail || null);
+      return ev;
     };
-
-    _prepareTemplate(element); // Remove text binding nodes after the walk to not disturb the TreeWalker
-
-
-    for (const n of nodesToRemove) {
-      n.parentNode.removeChild(n);
-    }
+    supportCustomEvent.prototype = window.Event.prototype;
   }
 
-}
-
-exports.Template = Template;
-
-const isTemplatePartActive = part => part.index !== -1; // Allows `document.createComment('')` to be renamed for a
-// small manual size-savings.
-
-
-exports.isTemplatePartActive = isTemplatePartActive;
-
-const createMarker = () => document.createComment('');
-/**
- * This regex extracts the attribute name preceding an attribute-position
- * expression. It does this by matching the syntax allowed for attributes
- * against the string literal directly preceding the expression, assuming that
- * the expression is in an attribute-value position.
- *
- * See attributes in the HTML spec:
- * https://www.w3.org/TR/html5/syntax.html#attributes-0
- *
- * "\0-\x1F\x7F-\x9F" are Unicode control characters
- *
- * " \x09\x0a\x0c\x0d" are HTML space characters:
- * https://www.w3.org/TR/html5/infrastructure.html#space-character
- *
- * So an attribute is:
- *  * The name: any character except a control character, space character, ('),
- *    ("), ">", "=", or "/"
- *  * Followed by zero or more space characters
- *  * Followed by "="
- *  * Followed by zero or more space characters
- *  * Followed by:
- *    * Any character except space, ('), ("), "<", ">", "=", (`), or
- *    * (") then any non-("), or
- *    * (') then any non-(')
- */
-
-
-exports.createMarker = createMarker;
-const lastAttributeNameRegex = /([ \x09\x0a\x0c\x0d])([^\0-\x1F\x7F-\x9F \x09\x0a\x0c\x0d"'>=/]+)([ \x09\x0a\x0c\x0d]*=[ \x09\x0a\x0c\x0d]*(?:[^ \x09\x0a\x0c\x0d"'`<>=]*|"[^"]*|'[^']*))$/;
-exports.lastAttributeNameRegex = lastAttributeNameRegex;
-},{}],"../node_modules/lit-html/lib/template-instance.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.TemplateInstance = void 0;
-
-var _dom = require("./dom.js");
-
-var _template = require("./template.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * @module lit-html
- */
-
-/**
- * An instance of a `Template` that can be attached to the DOM and updated
- * with new values.
- */
-class TemplateInstance {
-  constructor(template, processor, options) {
-    this._parts = [];
-    this.template = template;
-    this.processor = processor;
-    this.options = options;
-  }
-
-  update(values) {
-    let i = 0;
-
-    for (const part of this._parts) {
-      if (part !== undefined) {
-        part.setValue(values[i]);
-      }
-
-      i++;
-    }
-
-    for (const part of this._parts) {
-      if (part !== undefined) {
-        part.commit();
-      }
-    }
-  }
-
-  _clone() {
-    // When using the Custom Elements polyfill, clone the node, rather than
-    // importing it, to keep the fragment in the template's document. This
-    // leaves the fragment inert so custom elements won't upgrade and
-    // potentially modify their contents by creating a polyfilled ShadowRoot
-    // while we traverse the tree.
-    const fragment = _dom.isCEPolyfill ? this.template.element.content.cloneNode(true) : document.importNode(this.template.element.content, true);
-    const parts = this.template.parts;
-    let partIndex = 0;
-    let nodeIndex = 0;
-
-    const _prepareInstance = fragment => {
-      // Edge needs all 4 parameters present; IE11 needs 3rd parameter to be
-      // null
-      const walker = document.createTreeWalker(fragment, 133
-      /* NodeFilter.SHOW_{ELEMENT|COMMENT|TEXT} */
-      , null, false);
-      let node = walker.nextNode(); // Loop through all the nodes and parts of a template
-
-      while (partIndex < parts.length && node !== null) {
-        const part = parts[partIndex]; // Consecutive Parts may have the same node index, in the case of
-        // multiple bound attributes on an element. So each iteration we either
-        // increment the nodeIndex, if we aren't on a node with a part, or the
-        // partIndex if we are. By not incrementing the nodeIndex when we find a
-        // part, we allow for the next part to be associated with the current
-        // node if neccessasry.
-
-        if (!(0, _template.isTemplatePartActive)(part)) {
-          this._parts.push(undefined);
-
-          partIndex++;
-        } else if (nodeIndex === part.index) {
-          if (part.type === 'node') {
-            const part = this.processor.handleTextExpression(this.options);
-            part.insertAfterNode(node.previousSibling);
-
-            this._parts.push(part);
-          } else {
-            this._parts.push(...this.processor.handleAttributeExpressions(node, part.name, part.strings, this.options));
-          }
-
-          partIndex++;
-        } else {
-          nodeIndex++;
-
-          if (node.nodeName === 'TEMPLATE') {
-            _prepareInstance(node.content);
-          }
-
-          node = walker.nextNode();
-        }
-      }
-    };
-
-    _prepareInstance(fragment);
-
-    if (_dom.isCEPolyfill) {
-      document.adoptNode(fragment);
-      customElements.upgrade(fragment);
-    }
-
-    return fragment;
-  }
-
-}
-
-exports.TemplateInstance = TemplateInstance;
-},{"./dom.js":"../node_modules/lit-html/lib/dom.js","./template.js":"../node_modules/lit-html/lib/template.js"}],"../node_modules/lit-html/lib/template-result.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.SVGTemplateResult = exports.TemplateResult = void 0;
-
-var _dom = require("./dom.js");
-
-var _template = require("./template.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * @module lit-html
- */
-
-/**
- * The return type of `html`, which holds a Template and the values from
- * interpolated expressions.
- */
-class TemplateResult {
-  constructor(strings, values, type, processor) {
-    this.strings = strings;
-    this.values = values;
-    this.type = type;
-    this.processor = processor;
-  }
   /**
-   * Returns a string of HTML used to create a `<template>` element.
+   * @param {Element} el to check for stacking context
+   * @return {boolean} whether this el or its parents creates a stacking context
    */
-
-
-  getHTML() {
-    const endIndex = this.strings.length - 1;
-    let html = '';
-
-    for (let i = 0; i < endIndex; i++) {
-      const s = this.strings[i]; // This exec() call does two things:
-      // 1) Appends a suffix to the bound attribute name to opt out of special
-      // attribute value parsing that IE11 and Edge do, like for style and
-      // many SVG attributes. The Template class also appends the same suffix
-      // when looking up attributes to create Parts.
-      // 2) Adds an unquoted-attribute-safe marker for the first expression in
-      // an attribute. Subsequent attribute expressions will use node markers,
-      // and this is safe since attributes with multiple expressions are
-      // guaranteed to be quoted.
-
-      const match = _template.lastAttributeNameRegex.exec(s);
-
-      if (match) {
-        // We're starting a new bound attribute.
-        // Add the safe attribute suffix, and use unquoted-attribute-safe
-        // marker.
-        html += s.substr(0, match.index) + match[1] + match[2] + _template.boundAttributeSuffix + match[3] + _template.marker;
-      } else {
-        // We're either in a bound node, or trailing bound attribute.
-        // Either way, nodeMarker is safe to use.
-        html += s + _template.nodeMarker;
+  function createsStackingContext(el) {
+    while (el && el !== document.body) {
+      var s = window.getComputedStyle(el);
+      var invalid = function(k, ok) {
+        return !(s[k] === undefined || s[k] === ok);
       }
+      if (s.opacity < 1 ||
+          invalid('zIndex', 'auto') ||
+          invalid('transform', 'none') ||
+          invalid('mixBlendMode', 'normal') ||
+          invalid('filter', 'none') ||
+          invalid('perspective', 'none') ||
+          s['isolation'] === 'isolate' ||
+          s.position === 'fixed' ||
+          s.webkitOverflowScrolling === 'touch') {
+        return true;
+      }
+      el = el.parentElement;
     }
-
-    return html + this.strings[endIndex];
+    return false;
   }
 
-  getTemplateElement() {
-    const template = document.createElement('template');
-    template.innerHTML = this.getHTML();
-    return template;
-  }
-
-}
-/**
- * A TemplateResult for SVG fragments.
- *
- * This class wraps HTMl in an `<svg>` tag in order to parse its contents in the
- * SVG namespace, then modifies the template to remove the `<svg>` tag so that
- * clones only container the original fragment.
- */
-
-
-exports.TemplateResult = TemplateResult;
-
-class SVGTemplateResult extends TemplateResult {
-  getHTML() {
-    return `<svg>${super.getHTML()}</svg>`;
-  }
-
-  getTemplateElement() {
-    const template = super.getTemplateElement();
-    const content = template.content;
-    const svgElement = content.firstChild;
-    content.removeChild(svgElement);
-    (0, _dom.reparentNodes)(content, svgElement.firstChild);
-    return template;
-  }
-
-}
-
-exports.SVGTemplateResult = SVGTemplateResult;
-},{"./dom.js":"../node_modules/lit-html/lib/dom.js","./template.js":"../node_modules/lit-html/lib/template.js"}],"../node_modules/lit-html/lib/parts.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.EventPart = exports.PropertyPart = exports.PropertyCommitter = exports.BooleanAttributePart = exports.NodePart = exports.AttributePart = exports.AttributeCommitter = exports.isPrimitive = void 0;
-
-var _directive = require("./directive.js");
-
-var _dom = require("./dom.js");
-
-var _part = require("./part.js");
-
-var _templateInstance = require("./template-instance.js");
-
-var _templateResult = require("./template-result.js");
-
-var _template = require("./template.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * @module lit-html
- */
-const isPrimitive = value => value === null || !(typeof value === 'object' || typeof value === 'function');
-/**
- * Sets attribute values for AttributeParts, so that the value is only set once
- * even if there are multiple parts for an attribute.
- */
-
-
-exports.isPrimitive = isPrimitive;
-
-class AttributeCommitter {
-  constructor(element, name, strings) {
-    this.dirty = true;
-    this.element = element;
-    this.name = name;
-    this.strings = strings;
-    this.parts = [];
-
-    for (let i = 0; i < strings.length - 1; i++) {
-      this.parts[i] = this._createPart();
-    }
-  }
   /**
-   * Creates a single part. Override this to create a differnt type of part.
-   */
-
-
-  _createPart() {
-    return new AttributePart(this);
-  }
-
-  _getValue() {
-    const strings = this.strings;
-    const l = strings.length - 1;
-    let text = '';
-
-    for (let i = 0; i < l; i++) {
-      text += strings[i];
-      const part = this.parts[i];
-
-      if (part !== undefined) {
-        const v = part.value;
-
-        if (v != null && (Array.isArray(v) || typeof v !== 'string' && v[Symbol.iterator])) {
-          for (const t of v) {
-            text += typeof t === 'string' ? t : String(t);
-          }
-        } else {
-          text += typeof v === 'string' ? v : String(v);
-        }
-      }
-    }
-
-    text += strings[l];
-    return text;
-  }
-
-  commit() {
-    if (this.dirty) {
-      this.dirty = false;
-      this.element.setAttribute(this.name, this._getValue());
-    }
-  }
-
-}
-
-exports.AttributeCommitter = AttributeCommitter;
-
-class AttributePart {
-  constructor(comitter) {
-    this.value = undefined;
-    this.committer = comitter;
-  }
-
-  setValue(value) {
-    if (value !== _part.noChange && (!isPrimitive(value) || value !== this.value)) {
-      this.value = value; // If the value is a not a directive, dirty the committer so that it'll
-      // call setAttribute. If the value is a directive, it'll dirty the
-      // committer if it calls setValue().
-
-      if (!(0, _directive.isDirective)(value)) {
-        this.committer.dirty = true;
-      }
-    }
-  }
-
-  commit() {
-    while ((0, _directive.isDirective)(this.value)) {
-      const directive = this.value;
-      this.value = _part.noChange;
-      directive(this);
-    }
-
-    if (this.value === _part.noChange) {
-      return;
-    }
-
-    this.committer.commit();
-  }
-
-}
-
-exports.AttributePart = AttributePart;
-
-class NodePart {
-  constructor(options) {
-    this.value = undefined;
-    this._pendingValue = undefined;
-    this.options = options;
-  }
-  /**
-   * Inserts this part into a container.
+   * Finds the nearest <dialog> from the passed element.
    *
-   * This part must be empty, as its contents are not automatically moved.
+   * @param {Element} el to search from
+   * @return {HTMLDialogElement} dialog found
    */
-
-
-  appendInto(container) {
-    this.startNode = container.appendChild((0, _template.createMarker)());
-    this.endNode = container.appendChild((0, _template.createMarker)());
-  }
-  /**
-   * Inserts this part between `ref` and `ref`'s next sibling. Both `ref` and
-   * its next sibling must be static, unchanging nodes such as those that appear
-   * in a literal section of a template.
-   *
-   * This part must be empty, as its contents are not automatically moved.
-   */
-
-
-  insertAfterNode(ref) {
-    this.startNode = ref;
-    this.endNode = ref.nextSibling;
-  }
-  /**
-   * Appends this part into a parent part.
-   *
-   * This part must be empty, as its contents are not automatically moved.
-   */
-
-
-  appendIntoPart(part) {
-    part._insert(this.startNode = (0, _template.createMarker)());
-
-    part._insert(this.endNode = (0, _template.createMarker)());
-  }
-  /**
-   * Appends this part after `ref`
-   *
-   * This part must be empty, as its contents are not automatically moved.
-   */
-
-
-  insertAfterPart(ref) {
-    ref._insert(this.startNode = (0, _template.createMarker)());
-
-    this.endNode = ref.endNode;
-    ref.endNode = this.startNode;
-  }
-
-  setValue(value) {
-    this._pendingValue = value;
-  }
-
-  commit() {
-    while ((0, _directive.isDirective)(this._pendingValue)) {
-      const directive = this._pendingValue;
-      this._pendingValue = _part.noChange;
-      directive(this);
-    }
-
-    const value = this._pendingValue;
-
-    if (value === _part.noChange) {
-      return;
-    }
-
-    if (isPrimitive(value)) {
-      if (value !== this.value) {
-        this._commitText(value);
+  function findNearestDialog(el) {
+    while (el) {
+      if (el.localName === 'dialog') {
+        return /** @type {HTMLDialogElement} */ (el);
       }
-    } else if (value instanceof _templateResult.TemplateResult) {
-      this._commitTemplateResult(value);
-    } else if (value instanceof Node) {
-      this._commitNode(value);
-    } else if (Array.isArray(value) || value[Symbol.iterator]) {
-      this._commitIterable(value);
-    } else if (value === _part.nothing) {
-      this.value = _part.nothing;
-      this.clear();
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  /**
+   * Blur the specified element, as long as it's not the HTML body element.
+   * This works around an IE9/10 bug - blurring the body causes Windows to
+   * blur the whole application.
+   *
+   * @param {Element} el to blur
+   */
+  function safeBlur(el) {
+    if (el && el.blur && el !== document.body) {
+      el.blur();
+    }
+  }
+
+  /**
+   * @param {!NodeList} nodeList to search
+   * @param {Node} node to find
+   * @return {boolean} whether node is inside nodeList
+   */
+  function inNodeList(nodeList, node) {
+    for (var i = 0; i < nodeList.length; ++i) {
+      if (nodeList[i] === node) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @param {HTMLFormElement} el to check
+   * @return {boolean} whether this form has method="dialog"
+   */
+  function isFormMethodDialog(el) {
+    if (!el || !el.hasAttribute('method')) {
+      return false;
+    }
+    return el.getAttribute('method').toLowerCase() === 'dialog';
+  }
+
+  /**
+   * @param {!HTMLDialogElement} dialog to upgrade
+   * @constructor
+   */
+  function dialogPolyfillInfo(dialog) {
+    this.dialog_ = dialog;
+    this.replacedStyleTop_ = false;
+    this.openAsModal_ = false;
+
+    // Set a11y role. Browsers that support dialog implicitly know this already.
+    if (!dialog.hasAttribute('role')) {
+      dialog.setAttribute('role', 'dialog');
+    }
+
+    dialog.show = this.show.bind(this);
+    dialog.showModal = this.showModal.bind(this);
+    dialog.close = this.close.bind(this);
+
+    if (!('returnValue' in dialog)) {
+      dialog.returnValue = '';
+    }
+
+    if ('MutationObserver' in window) {
+      var mo = new MutationObserver(this.maybeHideModal.bind(this));
+      mo.observe(dialog, {attributes: true, attributeFilter: ['open']});
     } else {
-      // Fallback, will render the string representation
-      this._commitText(value);
+      // IE10 and below support. Note that DOMNodeRemoved etc fire _before_ removal. They also
+      // seem to fire even if the element was removed as part of a parent removal. Use the removed
+      // events to force downgrade (useful if removed/immediately added).
+      var removed = false;
+      var cb = function() {
+        removed ? this.downgradeModal() : this.maybeHideModal();
+        removed = false;
+      }.bind(this);
+      var timeout;
+      var delayModel = function(ev) {
+        if (ev.target !== dialog) { return; }  // not for a child element
+        var cand = 'DOMNodeRemoved';
+        removed |= (ev.type.substr(0, cand.length) === cand);
+        window.clearTimeout(timeout);
+        timeout = window.setTimeout(cb, 0);
+      };
+      ['DOMAttrModified', 'DOMNodeRemoved', 'DOMNodeRemovedFromDocument'].forEach(function(name) {
+        dialog.addEventListener(name, delayModel);
+      });
     }
+    // Note that the DOM is observed inside DialogManager while any dialog
+    // is being displayed as a modal, to catch modal removal from the DOM.
+
+    Object.defineProperty(dialog, 'open', {
+      set: this.setOpen.bind(this),
+      get: dialog.hasAttribute.bind(dialog, 'open')
+    });
+
+    this.backdrop_ = document.createElement('div');
+    this.backdrop_.className = 'backdrop';
+    this.backdrop_.addEventListener('click', this.backdropClick_.bind(this));
   }
 
-  _insert(node) {
-    this.endNode.parentNode.insertBefore(node, this.endNode);
-  }
+  dialogPolyfillInfo.prototype = {
 
-  _commitNode(value) {
-    if (this.value === value) {
-      return;
-    }
+    get dialog() {
+      return this.dialog_;
+    },
 
-    this.clear();
+    /**
+     * Maybe remove this dialog from the modal top layer. This is called when
+     * a modal dialog may no longer be tenable, e.g., when the dialog is no
+     * longer open or is no longer part of the DOM.
+     */
+    maybeHideModal: function() {
+      if (this.dialog_.hasAttribute('open') && document.body.contains(this.dialog_)) { return; }
+      this.downgradeModal();
+    },
 
-    this._insert(value);
+    /**
+     * Remove this dialog from the modal top layer, leaving it as a non-modal.
+     */
+    downgradeModal: function() {
+      if (!this.openAsModal_) { return; }
+      this.openAsModal_ = false;
+      this.dialog_.style.zIndex = '';
 
-    this.value = value;
-  }
-
-  _commitText(value) {
-    const node = this.startNode.nextSibling;
-    value = value == null ? '' : value;
-
-    if (node === this.endNode.previousSibling && node.nodeType === 3
-    /* Node.TEXT_NODE */
-    ) {
-        // If we only have a single text node between the markers, we can just
-        // set its value, rather than replacing it.
-        // TODO(justinfagnani): Can we just check if this.value is primitive?
-        node.data = value;
-      } else {
-      this._commitNode(document.createTextNode(typeof value === 'string' ? value : String(value)));
-    }
-
-    this.value = value;
-  }
-
-  _commitTemplateResult(value) {
-    const template = this.options.templateFactory(value);
-
-    if (this.value && this.value.template === template) {
-      this.value.update(value.values);
-    } else {
-      // Make sure we propagate the template processor from the TemplateResult
-      // so that we use its syntax extension, etc. The template factory comes
-      // from the render function options so that it can control template
-      // caching and preprocessing.
-      const instance = new _templateInstance.TemplateInstance(template, value.processor, this.options);
-
-      const fragment = instance._clone();
-
-      instance.update(value.values);
-
-      this._commitNode(fragment);
-
-      this.value = instance;
-    }
-  }
-
-  _commitIterable(value) {
-    // For an Iterable, we create a new InstancePart per item, then set its
-    // value to the item. This is a little bit of overhead for every item in
-    // an Iterable, but it lets us recurse easily and efficiently update Arrays
-    // of TemplateResults that will be commonly returned from expressions like:
-    // array.map((i) => html`${i}`), by reusing existing TemplateInstances.
-    // If _value is an array, then the previous render was of an
-    // iterable and _value will contain the NodeParts from the previous
-    // render. If _value is not an array, clear this part and make a new
-    // array for NodeParts.
-    if (!Array.isArray(this.value)) {
-      this.value = [];
-      this.clear();
-    } // Lets us keep track of how many items we stamped so we can clear leftover
-    // items from a previous render
-
-
-    const itemParts = this.value;
-    let partIndex = 0;
-    let itemPart;
-
-    for (const item of value) {
-      // Try to reuse an existing part
-      itemPart = itemParts[partIndex]; // If no existing part, create a new one
-
-      if (itemPart === undefined) {
-        itemPart = new NodePart(this.options);
-        itemParts.push(itemPart);
-
-        if (partIndex === 0) {
-          itemPart.appendIntoPart(this);
-        } else {
-          itemPart.insertAfterPart(itemParts[partIndex - 1]);
-        }
+      // This won't match the native <dialog> exactly because if the user set top on a centered
+      // polyfill dialog, that top gets thrown away when the dialog is closed. Not sure it's
+      // possible to polyfill this perfectly.
+      if (this.replacedStyleTop_) {
+        this.dialog_.style.top = '';
+        this.replacedStyleTop_ = false;
       }
 
-      itemPart.setValue(item);
-      itemPart.commit();
-      partIndex++;
-    }
+      // Clear the backdrop and remove from the manager.
+      this.backdrop_.parentNode && this.backdrop_.parentNode.removeChild(this.backdrop_);
+      dialogPolyfill.dm.removeDialog(this);
+    },
 
-    if (partIndex < itemParts.length) {
-      // Truncate the parts array so _value reflects the current state
-      itemParts.length = partIndex;
-      this.clear(itemPart && itemPart.endNode);
-    }
-  }
-
-  clear(startNode = this.startNode) {
-    (0, _dom.removeNodes)(this.startNode.parentNode, startNode.nextSibling, this.endNode);
-  }
-
-}
-/**
- * Implements a boolean attribute, roughly as defined in the HTML
- * specification.
- *
- * If the value is truthy, then the attribute is present with a value of
- * ''. If the value is falsey, the attribute is removed.
- */
-
-
-exports.NodePart = NodePart;
-
-class BooleanAttributePart {
-  constructor(element, name, strings) {
-    this.value = undefined;
-    this._pendingValue = undefined;
-
-    if (strings.length !== 2 || strings[0] !== '' || strings[1] !== '') {
-      throw new Error('Boolean attributes can only contain a single expression');
-    }
-
-    this.element = element;
-    this.name = name;
-    this.strings = strings;
-  }
-
-  setValue(value) {
-    this._pendingValue = value;
-  }
-
-  commit() {
-    while ((0, _directive.isDirective)(this._pendingValue)) {
-      const directive = this._pendingValue;
-      this._pendingValue = _part.noChange;
-      directive(this);
-    }
-
-    if (this._pendingValue === _part.noChange) {
-      return;
-    }
-
-    const value = !!this._pendingValue;
-
-    if (this.value !== value) {
+    /**
+     * @param {boolean} value whether to open or close this dialog
+     */
+    setOpen: function(value) {
       if (value) {
-        this.element.setAttribute(this.name, '');
+        this.dialog_.hasAttribute('open') || this.dialog_.setAttribute('open', '');
       } else {
-        this.element.removeAttribute(this.name);
+        this.dialog_.removeAttribute('open');
+        this.maybeHideModal();  // nb. redundant with MutationObserver
+      }
+    },
+
+    /**
+     * Handles clicks on the fake .backdrop element, redirecting them as if
+     * they were on the dialog itself.
+     *
+     * @param {!Event} e to redirect
+     */
+    backdropClick_: function(e) {
+      if (!this.dialog_.hasAttribute('tabindex')) {
+        // Clicking on the backdrop should move the implicit cursor, even if dialog cannot be
+        // focused. Create a fake thing to focus on. If the backdrop was _before_ the dialog, this
+        // would not be needed - clicks would move the implicit cursor there.
+        var fake = document.createElement('div');
+        this.dialog_.insertBefore(fake, this.dialog_.firstChild);
+        fake.tabIndex = -1;
+        fake.focus();
+        this.dialog_.removeChild(fake);
+      } else {
+        this.dialog_.focus();
+      }
+
+      var redirectedEvent = document.createEvent('MouseEvents');
+      redirectedEvent.initMouseEvent(e.type, e.bubbles, e.cancelable, window,
+          e.detail, e.screenX, e.screenY, e.clientX, e.clientY, e.ctrlKey,
+          e.altKey, e.shiftKey, e.metaKey, e.button, e.relatedTarget);
+      this.dialog_.dispatchEvent(redirectedEvent);
+      e.stopPropagation();
+    },
+
+    /**
+     * Focuses on the first focusable element within the dialog. This will always blur the current
+     * focus, even if nothing within the dialog is found.
+     */
+    focus_: function() {
+      // Find element with `autofocus` attribute, or fall back to the first form/tabindex control.
+      var target = this.dialog_.querySelector('[autofocus]:not([disabled])');
+      if (!target && this.dialog_.tabIndex >= 0) {
+        target = this.dialog_;
+      }
+      if (!target) {
+        // Note that this is 'any focusable area'. This list is probably not exhaustive, but the
+        // alternative involves stepping through and trying to focus everything.
+        var opts = ['button', 'input', 'keygen', 'select', 'textarea'];
+        var query = opts.map(function(el) {
+          return el + ':not([disabled])';
+        });
+        // TODO(samthor): tabindex values that are not numeric are not focusable.
+        query.push('[tabindex]:not([disabled]):not([tabindex=""])');  // tabindex != "", not disabled
+        target = this.dialog_.querySelector(query.join(', '));
+      }
+      safeBlur(document.activeElement);
+      target && target.focus();
+    },
+
+    /**
+     * Sets the zIndex for the backdrop and dialog.
+     *
+     * @param {number} dialogZ
+     * @param {number} backdropZ
+     */
+    updateZIndex: function(dialogZ, backdropZ) {
+      if (dialogZ < backdropZ) {
+        throw new Error('dialogZ should never be < backdropZ');
+      }
+      this.dialog_.style.zIndex = dialogZ;
+      this.backdrop_.style.zIndex = backdropZ;
+    },
+
+    /**
+     * Shows the dialog. If the dialog is already open, this does nothing.
+     */
+    show: function() {
+      if (!this.dialog_.open) {
+        this.setOpen(true);
+        this.focus_();
+      }
+    },
+
+    /**
+     * Show this dialog modally.
+     */
+    showModal: function() {
+      if (this.dialog_.hasAttribute('open')) {
+        throw new Error('Failed to execute \'showModal\' on dialog: The element is already open, and therefore cannot be opened modally.');
+      }
+      if (!document.body.contains(this.dialog_)) {
+        throw new Error('Failed to execute \'showModal\' on dialog: The element is not in a Document.');
+      }
+      if (!dialogPolyfill.dm.pushDialog(this)) {
+        throw new Error('Failed to execute \'showModal\' on dialog: There are too many open modal dialogs.');
+      }
+
+      if (createsStackingContext(this.dialog_.parentElement)) {
+        console.warn('A dialog is being shown inside a stacking context. ' +
+            'This may cause it to be unusable. For more information, see this link: ' +
+            'https://github.com/GoogleChrome/dialog-polyfill/#stacking-context');
+      }
+
+      this.setOpen(true);
+      this.openAsModal_ = true;
+
+      // Optionally center vertically, relative to the current viewport.
+      if (dialogPolyfill.needsCentering(this.dialog_)) {
+        dialogPolyfill.reposition(this.dialog_);
+        this.replacedStyleTop_ = true;
+      } else {
+        this.replacedStyleTop_ = false;
+      }
+
+      // Insert backdrop.
+      this.dialog_.parentNode.insertBefore(this.backdrop_, this.dialog_.nextSibling);
+
+      // Focus on whatever inside the dialog.
+      this.focus_();
+    },
+
+    /**
+     * Closes this HTMLDialogElement. This is optional vs clearing the open
+     * attribute, however this fires a 'close' event.
+     *
+     * @param {string=} opt_returnValue to use as the returnValue
+     */
+    close: function(opt_returnValue) {
+      if (!this.dialog_.hasAttribute('open')) {
+        throw new Error('Failed to execute \'close\' on dialog: The element does not have an \'open\' attribute, and therefore cannot be closed.');
+      }
+      this.setOpen(false);
+
+      // Leave returnValue untouched in case it was set directly on the element
+      if (opt_returnValue !== undefined) {
+        this.dialog_.returnValue = opt_returnValue;
+      }
+
+      // Triggering "close" event for any attached listeners on the <dialog>.
+      var closeEvent = new supportCustomEvent('close', {
+        bubbles: false,
+        cancelable: false
+      });
+      this.dialog_.dispatchEvent(closeEvent);
+    }
+
+  };
+
+  var dialogPolyfill = {};
+
+  dialogPolyfill.reposition = function(element) {
+    var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+    var topValue = scrollTop + (window.innerHeight - element.offsetHeight) / 2;
+    element.style.top = Math.max(scrollTop, topValue) + 'px';
+  };
+
+  dialogPolyfill.isInlinePositionSetByStylesheet = function(element) {
+    for (var i = 0; i < document.styleSheets.length; ++i) {
+      var styleSheet = document.styleSheets[i];
+      var cssRules = null;
+      // Some browsers throw on cssRules.
+      try {
+        cssRules = styleSheet.cssRules;
+      } catch (e) {}
+      if (!cssRules) { continue; }
+      for (var j = 0; j < cssRules.length; ++j) {
+        var rule = cssRules[j];
+        var selectedNodes = null;
+        // Ignore errors on invalid selector texts.
+        try {
+          selectedNodes = document.querySelectorAll(rule.selectorText);
+        } catch(e) {}
+        if (!selectedNodes || !inNodeList(selectedNodes, element)) {
+          continue;
+        }
+        var cssTop = rule.style.getPropertyValue('top');
+        var cssBottom = rule.style.getPropertyValue('bottom');
+        if ((cssTop && cssTop !== 'auto') || (cssBottom && cssBottom !== 'auto')) {
+          return true;
+        }
       }
     }
+    return false;
+  };
 
-    this.value = value;
-    this._pendingValue = _part.noChange;
-  }
-
-}
-/**
- * Sets attribute values for PropertyParts, so that the value is only set once
- * even if there are multiple parts for a property.
- *
- * If an expression controls the whole property value, then the value is simply
- * assigned to the property under control. If there are string literals or
- * multiple expressions, then the strings are expressions are interpolated into
- * a string first.
- */
-
-
-exports.BooleanAttributePart = BooleanAttributePart;
-
-class PropertyCommitter extends AttributeCommitter {
-  constructor(element, name, strings) {
-    super(element, name, strings);
-    this.single = strings.length === 2 && strings[0] === '' && strings[1] === '';
-  }
-
-  _createPart() {
-    return new PropertyPart(this);
-  }
-
-  _getValue() {
-    if (this.single) {
-      return this.parts[0].value;
-    }
-
-    return super._getValue();
-  }
-
-  commit() {
-    if (this.dirty) {
-      this.dirty = false;
-      this.element[this.name] = this._getValue();
-    }
-  }
-
-}
-
-exports.PropertyCommitter = PropertyCommitter;
-
-class PropertyPart extends AttributePart {} // Detect event listener options support. If the `capture` property is read
-// from the options object, then options are supported. If not, then the thrid
-// argument to add/removeEventListener is interpreted as the boolean capture
-// value so we should only pass the `capture` property.
-
-
-exports.PropertyPart = PropertyPart;
-let eventOptionsSupported = false;
-
-try {
-  const options = {
-    get capture() {
-      eventOptionsSupported = true;
+  dialogPolyfill.needsCentering = function(dialog) {
+    var computedStyle = window.getComputedStyle(dialog);
+    if (computedStyle.position !== 'absolute') {
       return false;
     }
 
+    // We must determine whether the top/bottom specified value is non-auto.  In
+    // WebKit/Blink, checking computedStyle.top == 'auto' is sufficient, but
+    // Firefox returns the used value. So we do this crazy thing instead: check
+    // the inline style and then go through CSS rules.
+    if ((dialog.style.top !== 'auto' && dialog.style.top !== '') ||
+        (dialog.style.bottom !== 'auto' && dialog.style.bottom !== '')) {
+      return false;
+    }
+    return !dialogPolyfill.isInlinePositionSetByStylesheet(dialog);
   };
-  window.addEventListener('test', options, options);
-  window.removeEventListener('test', options, options);
-} catch (_e) {}
 
-class EventPart {
-  constructor(element, eventName, eventContext) {
-    this.value = undefined;
-    this._pendingValue = undefined;
-    this.element = element;
-    this.eventName = eventName;
-    this.eventContext = eventContext;
+  /**
+   * @param {!Element} element to force upgrade
+   */
+  dialogPolyfill.forceRegisterDialog = function(element) {
+    if (window.HTMLDialogElement || element.showModal) {
+      console.warn('This browser already supports <dialog>, the polyfill ' +
+          'may not work correctly', element);
+    }
+    if (element.localName !== 'dialog') {
+      throw new Error('Failed to register dialog: The element is not a dialog.');
+    }
+    new dialogPolyfillInfo(/** @type {!HTMLDialogElement} */ (element));
+  };
 
-    this._boundHandleEvent = e => this.handleEvent(e);
-  }
+  /**
+   * @param {!Element} element to upgrade, if necessary
+   */
+  dialogPolyfill.registerDialog = function(element) {
+    if (!element.showModal) {
+      dialogPolyfill.forceRegisterDialog(element);
+    }
+  };
 
-  setValue(value) {
-    this._pendingValue = value;
-  }
+  /**
+   * @constructor
+   */
+  dialogPolyfill.DialogManager = function() {
+    /** @type {!Array<!dialogPolyfillInfo>} */
+    this.pendingDialogStack = [];
 
-  commit() {
-    while ((0, _directive.isDirective)(this._pendingValue)) {
-      const directive = this._pendingValue;
-      this._pendingValue = _part.noChange;
-      directive(this);
+    var checkDOM = this.checkDOM_.bind(this);
+
+    // The overlay is used to simulate how a modal dialog blocks the document.
+    // The blocking dialog is positioned on top of the overlay, and the rest of
+    // the dialogs on the pending dialog stack are positioned below it. In the
+    // actual implementation, the modal dialog stacking is controlled by the
+    // top layer, where z-index has no effect.
+    this.overlay = document.createElement('div');
+    this.overlay.className = '_dialog_overlay';
+    this.overlay.addEventListener('click', function(e) {
+      this.forwardTab_ = undefined;
+      e.stopPropagation();
+      checkDOM([]);  // sanity-check DOM
+    }.bind(this));
+
+    this.handleKey_ = this.handleKey_.bind(this);
+    this.handleFocus_ = this.handleFocus_.bind(this);
+
+    this.zIndexLow_ = 100000;
+    this.zIndexHigh_ = 100000 + 150;
+
+    this.forwardTab_ = undefined;
+
+    if ('MutationObserver' in window) {
+      this.mo_ = new MutationObserver(function(records) {
+        var removed = [];
+        records.forEach(function(rec) {
+          for (var i = 0, c; c = rec.removedNodes[i]; ++i) {
+            if (!(c instanceof Element)) {
+              continue;
+            } else if (c.localName === 'dialog') {
+              removed.push(c);
+            }
+            removed = removed.concat(c.querySelectorAll('dialog'));
+          }
+        });
+        removed.length && checkDOM(removed);
+      });
+    }
+  };
+
+  /**
+   * Called on the first modal dialog being shown. Adds the overlay and related
+   * handlers.
+   */
+  dialogPolyfill.DialogManager.prototype.blockDocument = function() {
+    document.documentElement.addEventListener('focus', this.handleFocus_, true);
+    document.addEventListener('keydown', this.handleKey_);
+    this.mo_ && this.mo_.observe(document, {childList: true, subtree: true});
+  };
+
+  /**
+   * Called on the first modal dialog being removed, i.e., when no more modal
+   * dialogs are visible.
+   */
+  dialogPolyfill.DialogManager.prototype.unblockDocument = function() {
+    document.documentElement.removeEventListener('focus', this.handleFocus_, true);
+    document.removeEventListener('keydown', this.handleKey_);
+    this.mo_ && this.mo_.disconnect();
+  };
+
+  /**
+   * Updates the stacking of all known dialogs.
+   */
+  dialogPolyfill.DialogManager.prototype.updateStacking = function() {
+    var zIndex = this.zIndexHigh_;
+
+    for (var i = 0, dpi; dpi = this.pendingDialogStack[i]; ++i) {
+      dpi.updateZIndex(--zIndex, --zIndex);
+      if (i === 0) {
+        this.overlay.style.zIndex = --zIndex;
+      }
     }
 
-    if (this._pendingValue === _part.noChange) {
-      return;
+    // Make the overlay a sibling of the dialog itself.
+    var last = this.pendingDialogStack[0];
+    if (last) {
+      var p = last.dialog.parentNode || document.body;
+      p.appendChild(this.overlay);
+    } else if (this.overlay.parentNode) {
+      this.overlay.parentNode.removeChild(this.overlay);
     }
+  };
 
-    const newListener = this._pendingValue;
-    const oldListener = this.value;
-    const shouldRemoveListener = newListener == null || oldListener != null && (newListener.capture !== oldListener.capture || newListener.once !== oldListener.once || newListener.passive !== oldListener.passive);
-    const shouldAddListener = newListener != null && (oldListener == null || shouldRemoveListener);
-
-    if (shouldRemoveListener) {
-      this.element.removeEventListener(this.eventName, this._boundHandleEvent, this._options);
+  /**
+   * @param {Element} candidate to check if contained or is the top-most modal dialog
+   * @return {boolean} whether candidate is contained in top dialog
+   */
+  dialogPolyfill.DialogManager.prototype.containedByTopDialog_ = function(candidate) {
+    while (candidate = findNearestDialog(candidate)) {
+      for (var i = 0, dpi; dpi = this.pendingDialogStack[i]; ++i) {
+        if (dpi.dialog === candidate) {
+          return i === 0;  // only valid if top-most
+        }
+      }
+      candidate = candidate.parentElement;
     }
+    return false;
+  };
 
-    if (shouldAddListener) {
-      this._options = getOptions(newListener);
-      this.element.addEventListener(this.eventName, this._boundHandleEvent, this._options);
-    }
+  dialogPolyfill.DialogManager.prototype.handleFocus_ = function(event) {
+    if (this.containedByTopDialog_(event.target)) { return; }
 
-    this.value = newListener;
-    this._pendingValue = _part.noChange;
-  }
+    event.preventDefault();
+    event.stopPropagation();
+    safeBlur(/** @type {Element} */ (event.target));
 
-  handleEvent(event) {
-    if (typeof this.value === 'function') {
-      this.value.call(this.eventContext || this.element, event);
+    if (this.forwardTab_ === undefined) { return; }  // move focus only from a tab key
+
+    var dpi = this.pendingDialogStack[0];
+    var dialog = dpi.dialog;
+    var position = dialog.compareDocumentPosition(event.target);
+    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+      if (this.forwardTab_) {  // forward
+        dpi.focus_();
+      } else {  // backwards
+        document.documentElement.focus();
+      }
     } else {
-      this.value.handleEvent(event);
-    }
-  }
-
-} // We copy options because of the inconsistent behavior of browsers when reading
-// the third argument of add/removeEventListener. IE11 doesn't support options
-// at all. Chrome 41 only reads `capture` if the argument is an object.
-
-
-exports.EventPart = EventPart;
-
-const getOptions = o => o && (eventOptionsSupported ? {
-  capture: o.capture,
-  passive: o.passive,
-  once: o.once
-} : o.capture);
-},{"./directive.js":"../node_modules/lit-html/lib/directive.js","./dom.js":"../node_modules/lit-html/lib/dom.js","./part.js":"../node_modules/lit-html/lib/part.js","./template-instance.js":"../node_modules/lit-html/lib/template-instance.js","./template-result.js":"../node_modules/lit-html/lib/template-result.js","./template.js":"../node_modules/lit-html/lib/template.js"}],"../node_modules/lit-html/lib/default-template-processor.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.defaultTemplateProcessor = exports.DefaultTemplateProcessor = void 0;
-
-var _parts = require("./parts.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * Creates Parts when a template is instantiated.
- */
-class DefaultTemplateProcessor {
-  /**
-   * Create parts for an attribute-position binding, given the event, attribute
-   * name, and string literals.
-   *
-   * @param element The element containing the binding
-   * @param name  The attribute name
-   * @param strings The string literals. There are always at least two strings,
-   *   event for fully-controlled bindings with a single expression.
-   */
-  handleAttributeExpressions(element, name, strings, options) {
-    const prefix = name[0];
-
-    if (prefix === '.') {
-      const comitter = new _parts.PropertyCommitter(element, name.slice(1), strings);
-      return comitter.parts;
+      // TODO: Focus after the dialog, is ignored.
     }
 
-    if (prefix === '@') {
-      return [new _parts.EventPart(element, name.slice(1), options.eventContext)];
-    }
-
-    if (prefix === '?') {
-      return [new _parts.BooleanAttributePart(element, name.slice(1), strings)];
-    }
-
-    const comitter = new _parts.AttributeCommitter(element, name, strings);
-    return comitter.parts;
-  }
-  /**
-   * Create parts for a text-position binding.
-   * @param templateFactory
-   */
-
-
-  handleTextExpression(options) {
-    return new _parts.NodePart(options);
-  }
-
-}
-
-exports.DefaultTemplateProcessor = DefaultTemplateProcessor;
-const defaultTemplateProcessor = new DefaultTemplateProcessor();
-exports.defaultTemplateProcessor = defaultTemplateProcessor;
-},{"./parts.js":"../node_modules/lit-html/lib/parts.js"}],"../node_modules/lit-html/lib/template-factory.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.templateFactory = templateFactory;
-exports.templateCaches = void 0;
-
-var _template = require("./template.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * The default TemplateFactory which caches Templates keyed on
- * result.type and result.strings.
- */
-function templateFactory(result) {
-  let templateCache = templateCaches.get(result.type);
-
-  if (templateCache === undefined) {
-    templateCache = {
-      stringsArray: new WeakMap(),
-      keyString: new Map()
-    };
-    templateCaches.set(result.type, templateCache);
-  }
-
-  let template = templateCache.stringsArray.get(result.strings);
-
-  if (template !== undefined) {
-    return template;
-  } // If the TemplateStringsArray is new, generate a key from the strings
-  // This key is shared between all templates with identical content
-
-
-  const key = result.strings.join(_template.marker); // Check if we already have a Template for this key
-
-  template = templateCache.keyString.get(key);
-
-  if (template === undefined) {
-    // If we have not seen this key before, create a new Template
-    template = new _template.Template(result, result.getTemplateElement()); // Cache the Template for this key
-
-    templateCache.keyString.set(key, template);
-  } // Cache all future queries for this TemplateStringsArray
-
-
-  templateCache.stringsArray.set(result.strings, template);
-  return template;
-}
-
-const templateCaches = new Map();
-exports.templateCaches = templateCaches;
-},{"./template.js":"../node_modules/lit-html/lib/template.js"}],"../node_modules/lit-html/lib/render.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.render = exports.parts = void 0;
-
-var _dom = require("./dom.js");
-
-var _parts = require("./parts.js");
-
-var _templateFactory = require("./template-factory.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- * @module lit-html
- */
-const parts = new WeakMap();
-/**
- * Renders a template to a container.
- *
- * To update a container with new values, reevaluate the template literal and
- * call `render` with the new result.
- *
- * @param result a TemplateResult created by evaluating a template tag like
- *     `html` or `svg`.
- * @param container A DOM parent to render to. The entire contents are either
- *     replaced, or efficiently updated if the same result type was previous
- *     rendered there.
- * @param options RenderOptions for the entire render tree rendered to this
- *     container. Render options must *not* change between renders to the same
- *     container, as those changes will not effect previously rendered DOM.
- */
-
-exports.parts = parts;
-
-const render = (result, container, options) => {
-  let part = parts.get(container);
-
-  if (part === undefined) {
-    (0, _dom.removeNodes)(container, container.firstChild);
-    parts.set(container, part = new _parts.NodePart(Object.assign({
-      templateFactory: _templateFactory.templateFactory
-    }, options)));
-    part.appendInto(container);
-  }
-
-  part.setValue(result);
-  part.commit();
-};
-
-exports.render = render;
-},{"./dom.js":"../node_modules/lit-html/lib/dom.js","./parts.js":"../node_modules/lit-html/lib/parts.js","./template-factory.js":"../node_modules/lit-html/lib/template-factory.js"}],"../node_modules/lit-html/lit-html.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-Object.defineProperty(exports, "DefaultTemplateProcessor", {
-  enumerable: true,
-  get: function () {
-    return _defaultTemplateProcessor.DefaultTemplateProcessor;
-  }
-});
-Object.defineProperty(exports, "defaultTemplateProcessor", {
-  enumerable: true,
-  get: function () {
-    return _defaultTemplateProcessor.defaultTemplateProcessor;
-  }
-});
-Object.defineProperty(exports, "SVGTemplateResult", {
-  enumerable: true,
-  get: function () {
-    return _templateResult.SVGTemplateResult;
-  }
-});
-Object.defineProperty(exports, "TemplateResult", {
-  enumerable: true,
-  get: function () {
-    return _templateResult.TemplateResult;
-  }
-});
-Object.defineProperty(exports, "directive", {
-  enumerable: true,
-  get: function () {
-    return _directive.directive;
-  }
-});
-Object.defineProperty(exports, "isDirective", {
-  enumerable: true,
-  get: function () {
-    return _directive.isDirective;
-  }
-});
-Object.defineProperty(exports, "removeNodes", {
-  enumerable: true,
-  get: function () {
-    return _dom.removeNodes;
-  }
-});
-Object.defineProperty(exports, "reparentNodes", {
-  enumerable: true,
-  get: function () {
-    return _dom.reparentNodes;
-  }
-});
-Object.defineProperty(exports, "noChange", {
-  enumerable: true,
-  get: function () {
-    return _part.noChange;
-  }
-});
-Object.defineProperty(exports, "nothing", {
-  enumerable: true,
-  get: function () {
-    return _part.nothing;
-  }
-});
-Object.defineProperty(exports, "AttributeCommitter", {
-  enumerable: true,
-  get: function () {
-    return _parts.AttributeCommitter;
-  }
-});
-Object.defineProperty(exports, "AttributePart", {
-  enumerable: true,
-  get: function () {
-    return _parts.AttributePart;
-  }
-});
-Object.defineProperty(exports, "BooleanAttributePart", {
-  enumerable: true,
-  get: function () {
-    return _parts.BooleanAttributePart;
-  }
-});
-Object.defineProperty(exports, "EventPart", {
-  enumerable: true,
-  get: function () {
-    return _parts.EventPart;
-  }
-});
-Object.defineProperty(exports, "isPrimitive", {
-  enumerable: true,
-  get: function () {
-    return _parts.isPrimitive;
-  }
-});
-Object.defineProperty(exports, "NodePart", {
-  enumerable: true,
-  get: function () {
-    return _parts.NodePart;
-  }
-});
-Object.defineProperty(exports, "PropertyCommitter", {
-  enumerable: true,
-  get: function () {
-    return _parts.PropertyCommitter;
-  }
-});
-Object.defineProperty(exports, "PropertyPart", {
-  enumerable: true,
-  get: function () {
-    return _parts.PropertyPart;
-  }
-});
-Object.defineProperty(exports, "parts", {
-  enumerable: true,
-  get: function () {
-    return _render.parts;
-  }
-});
-Object.defineProperty(exports, "render", {
-  enumerable: true,
-  get: function () {
-    return _render.render;
-  }
-});
-Object.defineProperty(exports, "templateCaches", {
-  enumerable: true,
-  get: function () {
-    return _templateFactory.templateCaches;
-  }
-});
-Object.defineProperty(exports, "templateFactory", {
-  enumerable: true,
-  get: function () {
-    return _templateFactory.templateFactory;
-  }
-});
-Object.defineProperty(exports, "TemplateInstance", {
-  enumerable: true,
-  get: function () {
-    return _templateInstance.TemplateInstance;
-  }
-});
-Object.defineProperty(exports, "createMarker", {
-  enumerable: true,
-  get: function () {
-    return _template.createMarker;
-  }
-});
-Object.defineProperty(exports, "isTemplatePartActive", {
-  enumerable: true,
-  get: function () {
-    return _template.isTemplatePartActive;
-  }
-});
-Object.defineProperty(exports, "Template", {
-  enumerable: true,
-  get: function () {
-    return _template.Template;
-  }
-});
-exports.svg = exports.html = void 0;
-
-var _defaultTemplateProcessor = require("./lib/default-template-processor.js");
-
-var _templateResult = require("./lib/template-result.js");
-
-var _directive = require("./lib/directive.js");
-
-var _dom = require("./lib/dom.js");
-
-var _part = require("./lib/part.js");
-
-var _parts = require("./lib/parts.js");
-
-var _render = require("./lib/render.js");
-
-var _templateFactory = require("./lib/template-factory.js");
-
-var _templateInstance = require("./lib/template-instance.js");
-
-var _template = require("./lib/template.js");
-
-/**
- * @license
- * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-/**
- *
- * Main lit-html module.
- *
- * Main exports:
- *
- * -  [[html]]
- * -  [[svg]]
- * -  [[render]]
- *
- * @module lit-html
- * @preferred
- */
-
-/**
- * Do not remove this comment; it keeps typedoc from misplacing the module
- * docs.
- */
-// TODO(justinfagnani): remove line when we get NodePart moving methods
-
-/**
- * Interprets a template literal as an HTML template that can efficiently
- * render to and update a container.
- */
-const html = (strings, ...values) => new _templateResult.TemplateResult(strings, values, 'html', _defaultTemplateProcessor.defaultTemplateProcessor);
-/**
- * Interprets a template literal as an SVG template that can efficiently
- * render to and update a container.
- */
-
-
-exports.html = html;
-
-const svg = (strings, ...values) => new _templateResult.SVGTemplateResult(strings, values, 'svg', _defaultTemplateProcessor.defaultTemplateProcessor);
-
-exports.svg = svg;
-},{"./lib/default-template-processor.js":"../node_modules/lit-html/lib/default-template-processor.js","./lib/template-result.js":"../node_modules/lit-html/lib/template-result.js","./lib/directive.js":"../node_modules/lit-html/lib/directive.js","./lib/dom.js":"../node_modules/lit-html/lib/dom.js","./lib/part.js":"../node_modules/lit-html/lib/part.js","./lib/parts.js":"../node_modules/lit-html/lib/parts.js","./lib/render.js":"../node_modules/lit-html/lib/render.js","./lib/template-factory.js":"../node_modules/lit-html/lib/template-factory.js","./lib/template-instance.js":"../node_modules/lit-html/lib/template-instance.js","./lib/template.js":"../node_modules/lit-html/lib/template.js"}],"images/kolleltiferesavrohom.jpg":[function(require,module,exports) {
-module.exports = "/kolleltiferesavrohom.ab94e869.jpg";
-},{}],"index.js":[function(require,module,exports) {
-"use strict";
-
-var _litHtml = require("lit-html");
-
-function _templateObject() {
-  var data = _taggedTemplateLiteral(["\n      <div>Hello ", "!</div>\n       <div>\n          <img class=\"w-full m-1\" src=", "/>\n          <section class=\"flex flex-wrap justify-center\">\n              <div class=\"max-w-xs m-5 \">\n                  <div class=\"hover:border-grey-dark hover:bg-grey-lightest border border-4 border-grey-light rounded  bg-white p-4 flex flex-col justify-between leading-normal\">\n                    <div class=\"mb-8\">\n                      <div class=\"text-blue-dark font-bold text-xl mb-2\">$36</div>\n                      <p class=\"text-grey-darkest text-base\">Help a family!</p>\n                    </div>\n                    </div>\n              </div>\n          </section>\n    </div>\n"]);
-
-  _templateObject = function _templateObject() {
-    return data;
+    return false;
   };
 
-  return data;
+  dialogPolyfill.DialogManager.prototype.handleKey_ = function(event) {
+    this.forwardTab_ = undefined;
+    if (event.keyCode === 27) {
+      event.preventDefault();
+      event.stopPropagation();
+      var cancelEvent = new supportCustomEvent('cancel', {
+        bubbles: false,
+        cancelable: true
+      });
+      var dpi = this.pendingDialogStack[0];
+      if (dpi && dpi.dialog.dispatchEvent(cancelEvent)) {
+        dpi.dialog.close();
+      }
+    } else if (event.keyCode === 9) {
+      this.forwardTab_ = !event.shiftKey;
+    }
+  };
+
+  /**
+   * Finds and downgrades any known modal dialogs that are no longer displayed. Dialogs that are
+   * removed and immediately readded don't stay modal, they become normal.
+   *
+   * @param {!Array<!HTMLDialogElement>} removed that have definitely been removed
+   */
+  dialogPolyfill.DialogManager.prototype.checkDOM_ = function(removed) {
+    // This operates on a clone because it may cause it to change. Each change also calls
+    // updateStacking, which only actually needs to happen once. But who removes many modal dialogs
+    // at a time?!
+    var clone = this.pendingDialogStack.slice();
+    clone.forEach(function(dpi) {
+      if (removed.indexOf(dpi.dialog) !== -1) {
+        dpi.downgradeModal();
+      } else {
+        dpi.maybeHideModal();
+      }
+    });
+  };
+
+  /**
+   * @param {!dialogPolyfillInfo} dpi
+   * @return {boolean} whether the dialog was allowed
+   */
+  dialogPolyfill.DialogManager.prototype.pushDialog = function(dpi) {
+    var allowed = (this.zIndexHigh_ - this.zIndexLow_) / 2 - 1;
+    if (this.pendingDialogStack.length >= allowed) {
+      return false;
+    }
+    if (this.pendingDialogStack.unshift(dpi) === 1) {
+      this.blockDocument();
+    }
+    this.updateStacking();
+    return true;
+  };
+
+  /**
+   * @param {!dialogPolyfillInfo} dpi
+   */
+  dialogPolyfill.DialogManager.prototype.removeDialog = function(dpi) {
+    var index = this.pendingDialogStack.indexOf(dpi);
+    if (index === -1) { return; }
+
+    this.pendingDialogStack.splice(index, 1);
+    if (this.pendingDialogStack.length === 0) {
+      this.unblockDocument();
+    }
+    this.updateStacking();
+  };
+
+  dialogPolyfill.dm = new dialogPolyfill.DialogManager();
+  dialogPolyfill.formSubmitter = null;
+  dialogPolyfill.useValue = null;
+
+  /**
+   * Installs global handlers, such as click listers and native method overrides. These are needed
+   * even if a no dialog is registered, as they deal with <form method="dialog">.
+   */
+  if (window.HTMLDialogElement === undefined) {
+
+    /**
+     * If HTMLFormElement translates method="DIALOG" into 'get', then replace the descriptor with
+     * one that returns the correct value.
+     */
+    var testForm = document.createElement('form');
+    testForm.setAttribute('method', 'dialog');
+    if (testForm.method !== 'dialog') {
+      var methodDescriptor = Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, 'method');
+      if (methodDescriptor) {
+        // nb. Some older iOS and older PhantomJS fail to return the descriptor. Don't do anything
+        // and don't bother to update the element.
+        var realGet = methodDescriptor.get;
+        methodDescriptor.get = function() {
+          if (isFormMethodDialog(this)) {
+            return 'dialog';
+          }
+          return realGet.call(this);
+        };
+        var realSet = methodDescriptor.set;
+        methodDescriptor.set = function(v) {
+          if (typeof v === 'string' && v.toLowerCase() === 'dialog') {
+            return this.setAttribute('method', v);
+          }
+          return realSet.call(this, v);
+        };
+        Object.defineProperty(HTMLFormElement.prototype, 'method', methodDescriptor);
+      }
+    }
+
+    /**
+     * Global 'click' handler, to capture the <input type="submit"> or <button> element which has
+     * submitted a <form method="dialog">. Needed as Safari and others don't report this inside
+     * document.activeElement.
+     */
+    document.addEventListener('click', function(ev) {
+      dialogPolyfill.formSubmitter = null;
+      dialogPolyfill.useValue = null;
+      if (ev.defaultPrevented) { return; }  // e.g. a submit which prevents default submission
+
+      var target = /** @type {Element} */ (ev.target);
+      if (!target || !isFormMethodDialog(target.form)) { return; }
+
+      var valid = (target.type === 'submit' && ['button', 'input'].indexOf(target.localName) > -1);
+      if (!valid) {
+        if (!(target.localName === 'input' && target.type === 'image')) { return; }
+        // this is a <input type="image">, which can submit forms
+        dialogPolyfill.useValue = ev.offsetX + ',' + ev.offsetY;
+      }
+
+      var dialog = findNearestDialog(target);
+      if (!dialog) { return; }
+
+      dialogPolyfill.formSubmitter = target;
+    }, false);
+
+    /**
+     * Replace the native HTMLFormElement.submit() method, as it won't fire the
+     * submit event and give us a chance to respond.
+     */
+    var nativeFormSubmit = HTMLFormElement.prototype.submit;
+    var replacementFormSubmit = function () {
+      if (!isFormMethodDialog(this)) {
+        return nativeFormSubmit.call(this);
+      }
+      var dialog = findNearestDialog(this);
+      dialog && dialog.close();
+    };
+    HTMLFormElement.prototype.submit = replacementFormSubmit;
+
+    /**
+     * Global form 'dialog' method handler. Closes a dialog correctly on submit
+     * and possibly sets its return value.
+     */
+    document.addEventListener('submit', function(ev) {
+      var form = /** @type {HTMLFormElement} */ (ev.target);
+      if (!isFormMethodDialog(form)) { return; }
+      ev.preventDefault();
+
+      var dialog = findNearestDialog(form);
+      if (!dialog) { return; }
+
+      // Forms can only be submitted via .submit() or a click (?), but anyway: sanity-check that
+      // the submitter is correct before using its value as .returnValue.
+      var s = dialogPolyfill.formSubmitter;
+      if (s && s.form === form) {
+        dialog.close(dialogPolyfill.useValue || s.value);
+      } else {
+        dialog.close();
+      }
+      dialogPolyfill.formSubmitter = null;
+    }, true);
+  }
+
+  dialogPolyfill['forceRegisterDialog'] = dialogPolyfill.forceRegisterDialog;
+  dialogPolyfill['registerDialog'] = dialogPolyfill.registerDialog;
+
+  if (typeof define === 'function' && 'amd' in define) {
+    // AMD support
+    define(function() { return dialogPolyfill; });
+  } else if (typeof module === 'object' && typeof module['exports'] === 'object') {
+    // CommonJS support
+    module['exports'] = dialogPolyfill;
+  } else {
+    // all others
+    window['dialogPolyfill'] = dialogPolyfill;
+  }
+})();
+
+},{}],"index.js":[function(require,module,exports) {
+var dialogPolyfill = require('dialog-polyfill');
+
+var dialog = document.querySelector('dialog');
+dialogPolyfill.registerDialog(dialog);
+var openModalLinks = document.querySelectorAll('a.donate-card');
+var _iteratorNormalCompletion = true;
+var _didIteratorError = false;
+var _iteratorError = undefined;
+
+try {
+  for (var _iterator = openModalLinks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    var link = _step.value;
+    link.addEventListener('click', openModal.bind(link));
+  }
+} catch (err) {
+  _didIteratorError = true;
+  _iteratorError = err;
+} finally {
+  try {
+    if (!_iteratorNormalCompletion && _iterator.return != null) {
+      _iterator.return();
+    }
+  } finally {
+    if (_didIteratorError) {
+      throw _iteratorError;
+    }
+  }
 }
 
-function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+function openModal(e) {
+  e.preventDefault();
+  var AMOUNT_PARAM = 'xAmount=',
+      href = this.href,
+      INDEX_OF_AMOUNT_IN_HREF = href.indexOf(AMOUNT_PARAM) + AMOUNT_PARAM.length,
+      amount = href.slice(INDEX_OF_AMOUNT_IN_HREF);
 
-var logo = require("./images/kolleltiferesavrohom.jpg"); // This renders <div>Hello Steve!</div> to the document body
+  if (href.indexOf(AMOUNT_PARAM) >= 0) {
+    var pledge_amount = document.querySelector('#pledge-amount');
+    pledge_amount.textContent = ' of $' + amount;
+  }
 
-
-(0, _litHtml.render)((0, _litHtml.html)(_templateObject(), name, logo), document.body);
-},{"lit-html":"../node_modules/lit-html/lit-html.js","./images/kolleltiferesavrohom.jpg":"images/kolleltiferesavrohom.jpg"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+  dialog.showModal();
+  setTimeout(function () {
+    window.location.href = href;
+  }, 2000);
+}
+},{"dialog-polyfill":"../node_modules/dialog-polyfill/dialog-polyfill.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -1754,7 +919,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59223" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53398" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
