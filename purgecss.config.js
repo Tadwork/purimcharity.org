@@ -11,6 +11,10 @@ class TailwindExtractor {
 module.exports = {
     content: ["./src/**/*.html"],
     whitelist: ["body", "html"],
+    whitelistPatternsChildren: [
+      /^flip-container-/,
+      /^donate-card__coin/,
+    ],
     extractors: [
         {
           extractor: TailwindExtractor,

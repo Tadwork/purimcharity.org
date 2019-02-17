@@ -56,16 +56,20 @@ body{
  .donate-card__coin svg text{
     visibility: hidden;
 }
+
 .donate-card__coin-small{
    @apply w-24 h-24;
 }
+
 .donate-card__coin-medium{
    @apply w-32 h-32;
 }
+
 .donate-card__coin-large{
    height: 10rem;
    width: 10rem;
 }
+
 dialog {
     position: fixed;
     top: 50%;
