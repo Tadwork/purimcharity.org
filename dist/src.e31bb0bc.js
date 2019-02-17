@@ -890,7 +890,7 @@ function openModal(e) {
   dialog.showModal();
   setTimeout(function () {
     window.location.href = href;
-  }, 2000);
+  }, 4000);
 }
 },{"dialog-polyfill":"../node_modules/dialog-polyfill/dialog-polyfill.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -919,7 +919,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53398" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62479" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);

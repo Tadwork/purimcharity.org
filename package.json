@@ -19,14 +19,17 @@
     "url": "https://github.com/Tadwork/purimcharity.org/issues"
   },
   "homepage": "https://github.com/Tadwork/purimcharity.org#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.2.2",
+    "block": "^0.2.1",
     "dialog-polyfill": "^0.4.10",
     "firebase-tools": "^6.3.0",
     "parcel-bundler": "^1.11.0",
     "parcel-plugin-purgecss": "^2.1.0",
+    "posthtml-img-autosize": "^0.1.3",
+    "posthtml-include": "^1.2.0",
+    "posthtml-partials": "^1.0.1",
     "sass": "^1.17.0",
     "tailwindcss": "^0.7.4",
     "utilities": "^1.0.5"

@@ -18,5 +18,5 @@ function openModal(e) {
     dialog.showModal();
     setTimeout(()=>{
         window.location.href = href
-    },2000)
+    },4000)
 }
