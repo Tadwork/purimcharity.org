@@ -1,38 +1,56 @@
 {
-  "name": "purimcharity.org",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "gatsby-starter-default",
+  "private": true,
+  "description": "A simple starter to get up and developing quickly with Gatsby",
+  "version": "0.1.0",
+  "author": "Kyle Mathews <mathews.kyle@gmail.com>",
+  "dependencies": {
+    "dialog-polyfill": "^0.4.10",
+    "emotion": "^10.0.7",
+    "gatsby": "^2.1.18",
+    "gatsby-image": "^2.0.30",
+    "gatsby-plugin-manifest": "^2.0.19",
+    "gatsby-plugin-offline": "^2.0.24",
+    "gatsby-plugin-postcss": "^2.0.5",
+    "gatsby-plugin-purgecss": "^3.1.0",
+    "gatsby-plugin-react-helmet": "^3.0.7",
+    "gatsby-plugin-sass": "^2.0.10",
+    "gatsby-plugin-sharp": "^2.0.22",
+    "gatsby-source-filesystem": "^2.0.23",
+    "gatsby-transformer-sharp": "^2.1.14",
+    "i": "^0.3.6",
+    "node-sass": "^4.11.0",
+    "npm": "^6.8.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "react-helmet": "^5.2.0",
+    "tailwindcss": "^0.7.4"
+  },
+  "devDependencies": {
+    "babel-plugin-macros": "^2.5.0",
+    "babel-preset-gatsby": "^0.1.8",
+    "prettier": "^1.16.4",
+    "sass": "^1.17.2",
+    "tailwind.macro": "^0.5.10"
+  },
+  "keywords": [
+    "gatsby"
+  ],
+  "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npm run build && firebase deploy",
-    "build": "rm -rf dist && parcel build src/index.html && npm run purgecss",
-    "purgecss": "node purgecss.js",
-    "start": "parcel serve src/index.html --open"
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "format": "prettier --write src/**/*.{js,jsx}",
+    "start": "npm run develop",
+    "serve": "gatsby serve",
+    "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tadwork/purimcharity.org.git"
+    "url": "https://github.com/gatsbyjs/gatsby-starter-default"
   },
-  "author": "",
-  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Tadwork/purimcharity.org/issues"
-  },
-  "homepage": "https://github.com/Tadwork/purimcharity.org#readme",
-  "dependencies": {},
-  "devDependencies": {
-    "@babel/core": "^7.2.2",
-    "block": "^0.2.1",
-    "dialog-polyfill": "^0.4.10",
-    "firebase-tools": "^6.3.0",
-    "parcel-bundler": "^1.11.0",
-    "posthtml-img-autosize": "^0.1.3",
-    "posthtml-include": "^1.2.0",
-    "posthtml-partials": "^1.0.1",
-    "purgecss": "^1.1.0",
-    "sass": "^1.17.0",
-    "tailwindcss": "^0.7.4",
-    "utilities": "^1.0.5"
+    "url": "https://github.com/gatsbyjs/gatsby/issues"
   }
 }
