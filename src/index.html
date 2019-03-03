@@ -28,12 +28,12 @@
     </nav>
     <div class="  logo">
       <img class=" w-full  " src="./images/just_logo2.jpg" />
-      <h3 class="float-right">Under the auspices of R' Dovid Baum</h3>
+      <h3 class="float-right text-brand-darker">Under the auspices of R' Dovid Baum</h3>
     </div>
     <section class="mt-8 font-sans container m-auto max-w-xl bg-brand-lighter">
       <div class="flex flex-col sm:flex-row flex-wrap my-4">
-        <partial name="donate" amount size icon>
-          <a href="https://secure.cardknox.com/kolleltiferesavrohom?xAmount={{amount}}"	class="donate-card w-full sm:w-1/2 md:w-1/3 md:h-64 h-48 border-r group"
+        <partial name="donate" amount size icon gateway>
+          <a href="https://secure.cardknox.com/{{gateway}}?xAmount={{amount}}"	class="donate-card w-full sm:w-1/2 md:w-1/3 md:h-64 h-48 border-r group"
             >
               <div class="flip-container flip-container-{{size}}" ontouchstart="this.classList.toggle('hover');">
                   <div class="flipper">
@@ -56,21 +56,21 @@
                 >Donate ${{amount}} to צדקה‎</p>
             </a>
           </partial>
-          <partial name="donate" amount="2500" size="large" icon="king"></partial>
-          <partial name="donate" amount="1800" size="large" icon="masks"></partial>
-          <partial name="donate" amount="1000" size="large" icon="crown"></partial>
+          <partial name="donate" amount="2500" size="large" icon="king" gateway="kolleltiferesavrohom"></partial>
+          <partial name="donate" amount="1800" size="large" icon="masks" gateway="kolleltiferesavrohom"></partial>
+          <partial name="donate" amount="1000" size="large" icon="crown" gateway="kolleltiferesavrohom"></partial>
 
-          <partial name="donate" amount="750" size="large" icon="clown"></partial>
-          <partial name="donate" amount="500" size="large" icon="give"></partial>
-          <partial name="donate" amount="360" size="large" icon="basket"></partial>
+          <partial name="donate" amount="750" size="large" icon="clown" gateway="kolleltiferesavrohom"></partial>
+          <partial name="donate" amount="500" size="large" icon="give" gateway="kolleltiferesavrohom"></partial>
+          <partial name="donate" amount="360" size="large" icon="basket" gateway="kolleltiferesavrohom"></partial>
 
-          <partial name="donate" amount="250" size="medium" icon="king"></partial>
-          <partial name="donate" amount="180" size="medium" icon="give"></partial>
-          <partial name="donate" amount="100" size="medium" icon="masks"></partial>
+          <partial name="donate" amount="250" size="medium" icon="king" gateway="kolleltiferesavrohom"></partial>
+          <partial name="donate" amount="180" size="medium" icon="give" gateway="ahavaschessed"></partial>
+          <partial name="donate" amount="100" size="medium" icon="masks" gateway="ahavaschessed"></partial>
 
-          <partial name="donate" amount="50" size="small" icon="scroll"></partial>
-          <partial name="donate" amount="36" size="small" icon="wine"></partial>
-          <partial name="donate" amount="18" size="small" icon="basket"></partial>
+          <partial name="donate" amount="50" size="small" icon="scroll" gateway="ahavaschessed"></partial>
+          <partial name="donate" amount="36" size="small" icon="wine" gateway="ahavaschessed"></partial>
+          <partial name="donate" amount="18" size="small" icon="basket" gateway="ahavaschessed"></partial>
 				
       </div>
 
@@ -91,6 +91,14 @@
           Choose a custom amount to donate to צדקה‎
         </p>
       </a>
+      <footer class="flex my-8 px-3 text-brand-dark">
+        <div class="">
+           2019 - Ahavas Chesed
+        </div>
+        <div class="ml-auto">
+          <a class="text-brand-dark" href="mailto:ahavaschesedrbaum@gmail.com">AhavasChesedRBaum@gmail.com</a>
+        </div>
+      </footer>
 		</section>
 		<dialog class="bg-brand-darker">
 				<div class="pyro">
