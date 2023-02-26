@@ -7,6 +7,11 @@
 		transform: rotateY(180deg);
 	}
 
+.flip-container-x-large, .flip-container-x-large .front, .flip-container-x-large .back {
+	width: 12rem;
+	height: 12rem;
+}
+
 .flip-container-large, .flip-container-large .front, .flip-container-large .back {
 	width: 10rem;
 	height: 10rem;
